@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime + dev dependencies in a single cached layer.
+# Source code is bind-mounted at runtime — no COPY of api/ or model/.
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+# Run as root in dev to avoid volume-permission issues on Windows/macOS.
+CMD ["uvicorn", "api.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--reload"]

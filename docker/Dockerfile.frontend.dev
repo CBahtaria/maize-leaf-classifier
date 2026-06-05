@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install node_modules into the image layer so they survive the source bind-mount.
+# The named volume in docker-compose.dev.yml keeps node_modules from being
+# shadowed when ../frontend is mounted over /app.
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci
+
+# Source (minus node_modules) is bind-mounted at runtime.
+CMD ["npm", "run", "dev"]

@@ -34,10 +34,14 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: true,  // bind to 0.0.0.0 — required inside Docker and useful for mobile testing
+    port: 5173,
     proxy: {
-      '/predict': { target: 'http://localhost:8000', changeOrigin: true },
-      '/health': { target: 'http://localhost:8000', changeOrigin: true },
-      '/model': { target: 'http://localhost:8000', changeOrigin: true },
+      // API_HOST is set to the Docker service name ("api") inside docker-compose.dev.yml.
+      // Falls back to "localhost" for plain local development.
+      '/predict': { target: `http://${process.env.API_HOST ?? 'localhost'}:8000`, changeOrigin: true },
+      '/health':  { target: `http://${process.env.API_HOST ?? 'localhost'}:8000`, changeOrigin: true },
+      '/model':   { target: `http://${process.env.API_HOST ?? 'localhost'}:8000`, changeOrigin: true },
     },
   },
   build: {

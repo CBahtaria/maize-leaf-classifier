@@ -13,21 +13,35 @@ Android devices.
 
 ## Quick start
 
-### Run with Docker
+### One-command dev environment (any OS)
 
-Works on Linux, macOS, and Windows (Docker Desktop with Linux containers):
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) — works
+identically on Linux, macOS, and Windows without installing Python or Node locally:
 
 ```bash
 git clone https://github.com/CBahtaria/maize-leaf-classifier
 cd maize-leaf-classifier
-# Place model artifacts in model_artifacts/
+docker compose -f docker/docker-compose.dev.yml up --build
+```
+
+| Service | URL | Notes |
+|---|---|---|
+| API | http://localhost:8000 | FastAPI — hot-reloads on `api/` and `model/` changes |
+| Swagger UI | http://localhost:8000/docs | Interactive API docs |
+| Frontend | http://localhost:5173 | Vite dev server — HMR on `frontend/src/` changes |
+
+Source files on your host are bind-mounted into the containers, so edits take
+effect immediately without rebuilding.
+
+### Production (Docker)
+
+```bash
+# Place model artifacts in model_artifacts/ first
 docker compose -f docker/docker-compose.yml up -d
 curl http://localhost/health
 ```
 
-> **Windows:** use `copy .env.example .env` (CMD) or `Copy-Item .env.example .env` (PowerShell) instead of `cp`.
-
-### Local development
+### Local development (without Docker)
 
 **Linux / macOS:**
 ```bash
@@ -49,6 +63,7 @@ Set-Location frontend; npm ci; npm run dev   # PWA on :5173
 
 > **Note:** TensorFlow requires Python 3.9–3.12. Use `py -3.11` or install
 > Python 3.11 from [python.org](https://www.python.org/downloads/) on Windows.
+> The Docker dev environment above avoids this constraint entirely.
 
 ### Train a model
 
