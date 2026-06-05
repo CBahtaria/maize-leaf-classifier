@@ -54,7 +54,7 @@ services:
     image: ghcr.io/${GITHUB_REPOSITORY:-local}/maize-frontend:${FRONTEND_TAG:-latest}
     volumes:
       - frontend_dist:/usr/share/nginx/html
-    entrypoint: sh -c "cp -r /usr/share/nginx/html/. /dist/ && echo 'Frontend assets ready'"
+    entrypoint: sh -c "cp -r /app/dist/. /usr/share/nginx/html/ && echo 'Frontend assets ready'"
     restart: "no"
 
 volumes:
