@@ -1,8 +1,10 @@
 import os
 import tempfile
+
 import numpy as np
-import tensorflow as tf
 import pytest
+import tensorflow as tf
+
 from model.export import export_tflite
 
 

@@ -1,10 +1,11 @@
 """Shared pytest fixtures."""
 import io
-import pytest
-import numpy as np
-from PIL import Image
 from unittest.mock import MagicMock
+
+import numpy as np
+import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
 
 
 def _make_jpeg_bytes(r: int, g: int, b: int) -> bytes:

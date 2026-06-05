@@ -1,5 +1,6 @@
 """Generate PWA icons (192×192 and 512×512) as simple green-leaf PNGs."""
 from pathlib import Path
+
 from PIL import Image, ImageDraw
 
 ICONS_DIR = Path(__file__).parent.parent / "frontend" / "public" / "icons"

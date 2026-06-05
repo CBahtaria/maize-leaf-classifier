@@ -1,6 +1,5 @@
 """Unit tests for model/preprocess.py — validates FIX-1, FIX-2 fixes."""
 import numpy as np
-import pytest
 
 
 def test_mobilenetv2_preprocess_range():
@@ -52,5 +51,5 @@ def test_stratified_split_preserves_ratio():
     (tp, tl), (vp, vl), (ep, el) = stratified_split(paths, labels)
     # Each split should have roughly 50% healthy
     for split_labels, name in [(tl, "train"), (vl, "val"), (el, "test")]:
-        ratio = sum(1 for l in split_labels if l == 0) / len(split_labels)
+        ratio = sum(1 for lbl in split_labels if lbl == 0) / len(split_labels)
         assert abs(ratio - 0.5) < 0.05, f"{name} healthy ratio {ratio:.2f} differs from 0.50 by > 5%"
