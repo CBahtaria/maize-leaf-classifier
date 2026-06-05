@@ -37,3 +37,6 @@ Thumbs.db
 
 # Notebooks
 .ipynb_checkpoints/
+
+# Deployment state
+.active-slot

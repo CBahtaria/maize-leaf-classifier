@@ -1,0 +1,52 @@
+# Development environment — hot reload for API (uvicorn --reload) and frontend (Vite HMR).
+# Works on Linux, macOS, and Windows (Docker Desktop with Linux containers).
+#
+# Usage:
+#   docker compose -f docker/docker-compose.dev.yml up --build
+#
+# Access:
+#   API      http://localhost:8000  (FastAPI + auto-reload on source changes)
+#   Frontend http://localhost:5173  (Vite dev server + HMR)
+#   Docs     http://localhost:8000/docs
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api.dev
+    volumes:
+      - ../api:/app/api
+      - ../model:/app/model
+      - ../model_artifacts:/app/model_artifacts
+      - ../tests:/app/tests
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/model_artifacts/mobilenetv2_best.tflite
+      - MODEL_META_PATH=/app/model_artifacts/mobilenetv2_meta.json
+      - ALLOWED_ORIGINS=["http://localhost:5173","http://localhost:8000","http://127.0.0.1:5173"]
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend.dev
+    volumes:
+      - ../frontend:/app
+      # Named volume keeps container node_modules intact when the source directory
+      # is mounted over /app — avoids host/container module mismatch on Windows.
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      # Vite reads API_HOST to proxy /predict, /health, /model to the right container.
+      # "api" resolves to the api service above via Docker's internal DNS.
+      - API_HOST=api
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  frontend_node_modules:

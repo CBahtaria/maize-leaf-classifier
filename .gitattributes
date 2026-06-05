@@ -1,0 +1,18 @@
+# Normalize all text files to LF on commit.
+# Shell scripts MUST be LF even when checked out on Windows or they break.
+* text=auto eol=lf
+
+# Windows-native scripts use CRLF
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binary assets — no line-ending transformation
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.tflite binary
+*.keras  binary
+*.h5     binary
