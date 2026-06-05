@@ -26,6 +26,23 @@ def sample_diseased_image() -> bytes:
     return _make_jpeg_bytes(139, 69, 19)
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Reset the in-memory rate limiter storage before every test.
+
+    The module-level limiter singleton persists its counter across all tests
+    in the same pytest session. Without this reset, tests running after the
+    first ~20 /predict requests get spurious 429 responses.
+    """
+    from api.middleware.rate_limit import limiter
+    try:
+        # limits ≥2.3: MemoryStorage keeps counts in _events dict
+        limiter._storage._events.clear()
+    except AttributeError:
+        pass
+    yield
+
+
 @pytest.fixture
 def test_client(monkeypatch):
     import api.dependencies as deps
