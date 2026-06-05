@@ -33,13 +33,18 @@ def reset_rate_limiter():
     The module-level limiter singleton persists its counter across all tests
     in the same pytest session. Without this reset, tests running after the
     first ~20 /predict requests get spurious 429 responses.
+
+    Handles both limits library versions:
+      2.x — counts stored in MemoryStorage.storage (OrderedDict)
+      3.x — counts stored in MemoryStorage._events (dict of deques)
     """
     from api.middleware.rate_limit import limiter
-    try:
-        # limits ≥2.3: MemoryStorage keeps counts in _events dict
-        limiter._storage._events.clear()
-    except AttributeError:
-        pass
+    st = limiter._storage
+    # Clear whichever dict attributes exist (varies by limits version)
+    for attr in ("storage", "_events", "events", "expirations"):
+        obj = getattr(st, attr, None)
+        if isinstance(obj, dict):
+            obj.clear()
     yield
 
 
