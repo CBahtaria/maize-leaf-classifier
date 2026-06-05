@@ -15,22 +15,40 @@ Android devices.
 
 ### Run with Docker
 
+Works on Linux, macOS, and Windows (Docker Desktop with Linux containers):
+
 ```bash
-git clone <repo> && cd maize-leaf-classifier
-cp .env.example .env
+git clone https://github.com/CBahtaria/maize-leaf-classifier
+cd maize-leaf-classifier
 # Place model artifacts in model_artifacts/
 docker compose -f docker/docker-compose.yml up -d
 curl http://localhost/health
 ```
 
+> **Windows:** use `copy .env.example .env` (CMD) or `Copy-Item .env.example .env` (PowerShell) instead of `cp`.
+
 ### Local development
 
+**Linux / macOS:**
 ```bash
-python3.11 -m venv .venv && source .venv/bin/activate
+python3.11 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn api.main:app --reload          # API on :8000
 cd frontend && npm ci && npm run dev   # PWA on :5173
 ```
+
+**Windows (PowerShell):**
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn api.main:app --reload          # API on :8000
+Set-Location frontend; npm ci; npm run dev   # PWA on :5173
+```
+
+> **Note:** TensorFlow requires Python 3.9–3.12. Use `py -3.11` or install
+> Python 3.11 from [python.org](https://www.python.org/downloads/) on Windows.
 
 ### Train a model
 
@@ -52,22 +70,37 @@ Or use the Colab notebook: `model/notebooks/MaizeDiseaseClassifier_v1.ipynb`.
 
 ## Blue-green deployment
 
-Zero-downtime deployments via nginx upstream switching:
+Zero-downtime deployments via nginx upstream switching.
 
+**Linux / macOS:**
 ```bash
-# Deploy new version
-bash scripts/deploy.sh <git-sha>
-
-# Rollback if needed
-bash scripts/rollback.sh
+bash scripts/deploy.sh <git-sha>    # deploy new version
+bash scripts/rollback.sh            # instant revert
 ```
 
-See the [deployment guide](docs/report/deployment-guide.md) for full setup.
+**Windows (PowerShell — requires Docker Desktop):**
+```powershell
+.\scripts\deploy.ps1 -Tag <git-sha>   # deploy new version
+.\scripts\rollback.ps1                # instant revert
+```
+
+See the [deployment guide](docs/report/deployment-guide.md) for full VPS setup.
 
 ## Colab inference demo
 
 Serve the API from Google Colab with a public ngrok URL: open
 `model/notebooks/ColabInference.ipynb` in Colab.
+
+## Platform support
+
+| Component | Linux | macOS | Windows |
+|---|---|---|---|
+| API (FastAPI + TFLite) | ✓ | ✓ | ✓ (Python 3.9–3.12) |
+| Frontend (Vite + React) | ✓ | ✓ | ✓ |
+| Docker deployment | ✓ | ✓ | ✓ (Docker Desktop) |
+| Blue-green deploy | `deploy.sh` | `deploy.sh` | `deploy.ps1` |
+| CI (GitHub Actions) | ubuntu-latest | — | windows-latest (frontend) |
+| Production VPS | Linux only | — | — |
 
 ## Documentation
 

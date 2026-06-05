@@ -2,19 +2,19 @@
 import shutil
 from pathlib import Path
 
-MODEL_PATH = "model_artifacts/mobilenetv2_best.keras"
-TFJS_OUT = "model_artifacts/tfjs_model"
-DEST = "frontend/public/models/tfjs"
+ROOT       = Path(__file__).parent.parent
+MODEL_PATH = ROOT / "model_artifacts" / "mobilenetv2_best.keras"
+TFJS_OUT   = ROOT / "model_artifacts" / "tfjs_model"
+DEST       = ROOT / "frontend" / "public" / "models" / "tfjs"
 
-import tensorflow as tf
+import tensorflow as tf  # noqa: E402
 model = tf.keras.models.load_model(MODEL_PATH)
 
-import tensorflowjs as tfjs
-tfjs.converters.save_keras_model(model, TFJS_OUT)
+import tensorflowjs as tfjs  # noqa: E402
+tfjs.converters.save_keras_model(model, str(TFJS_OUT))
 print(f"TF.js model saved to {TFJS_OUT}")
 
-dest = Path(DEST)
-dest.mkdir(parents=True, exist_ok=True)
-for f in Path(TFJS_OUT).iterdir():
-    shutil.copy(f, dest / f.name)
+DEST.mkdir(parents=True, exist_ok=True)
+for f in TFJS_OUT.iterdir():
+    shutil.copy(f, DEST / f.name)
 print(f"Copied to {DEST}")
