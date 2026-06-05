@@ -5,9 +5,8 @@ import time
 
 from fastapi import APIRouter, Request
 
-from api.dependencies import get_model_meta
-from api.schemas import HealthResponse, ModelInfoResponse
 import api.dependencies as deps
+from api.schemas import HealthResponse, ModelInfoResponse
 
 router = APIRouter()
 

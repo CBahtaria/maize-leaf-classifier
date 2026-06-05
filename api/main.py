@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,9 +81,9 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
 
     # Routers
-    from api.routes.predict import router as predict_router
     from api.routes.batch import router as batch_router
     from api.routes.health import router as health_router
+    from api.routes.predict import router as predict_router
 
     app.include_router(predict_router)
     app.include_router(batch_router)

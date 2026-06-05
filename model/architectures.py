@@ -7,24 +7,21 @@ FIX-1: Each architecture's preprocess_input is embedded as the first layer of th
 FIX-5: Layer unfreezing uses dynamic len(base_model.layers) - fine_tune_n, not hardcoded indices.
 """
 import tensorflow as tf
-from tensorflow.keras import layers, Model
+from tensorflow.keras import Model, layers
 from tensorflow.keras.applications import (
-    MobileNetV2,
-    Xception,
-    InceptionV3,
     VGG16,
+    InceptionV3,
+    MobileNetV2,
     ResNet50,
-)
-from tensorflow.keras.applications import (
-    mobilenet_v2,
-    xception,
+    Xception,
     inception_v3,
-    vgg16,
+    mobilenet_v2,
     resnet50,
+    vgg16,
+    xception,
 )
 
 from model.config import FINE_TUNE_LAYERS, HEAD, IMG_SIZE
-
 
 # Registry of architecture-specific configs
 # preprocess: maps raw [0,255] float32 to architecture's expected range
@@ -165,7 +162,7 @@ def unfreeze_top_n(model: tf.keras.Model, arch_name: str) -> int:
     for i, layer in enumerate(base_model.layers):
         layer.trainable = i >= fine_tune_at
 
-    trainable_count = sum(1 for l in model.trainable_variables)
+    trainable_count = sum(1 for _ in model.trainable_variables)
     return trainable_count
 
 

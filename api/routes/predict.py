@@ -2,15 +2,14 @@
 from __future__ import annotations
 
 import logging
-import time
 
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
+from api.config import settings
 from api.dependencies import get_model, get_model_meta
 from api.middleware.rate_limit import PREDICT_LIMIT, limiter
 from api.middleware.validation import validate_image_file
 from api.schemas import PredictionResponse
-from api.config import settings
 from model.predict import predict_image
 
 logger = logging.getLogger(__name__)

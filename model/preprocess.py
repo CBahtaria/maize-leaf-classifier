@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import StratifiedShuffleSplit
 
-from model.config import BATCH_SIZE, CHANNELS, DISEASE_LABELS, IMG_SIZE, SEED, SUPPORTED_EXTENSIONS
+from model.config import BATCH_SIZE, CHANNELS, IMG_SIZE, SEED, SUPPORTED_EXTENSIONS
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,9 @@ def build_tf_dataset(
     path_ds = tf.data.Dataset.from_tensor_slices((paths, labels))
     path_ds = path_ds.shuffle(len(paths), seed=SEED, reshuffle_each_iteration=True) if augment else path_ds
 
-    load_fn = lambda p, l: _load_image(p, l, img_size)
+    def load_fn(p, lbl):
+        return _load_image(p, lbl, img_size)
+
     ds = path_ds.map(load_fn, num_parallel_calls=AUTOTUNE)
 
     # Apply architecture-specific preprocessing (FIX-1)

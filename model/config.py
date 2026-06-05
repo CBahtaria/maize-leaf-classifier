@@ -1,7 +1,5 @@
 """Central configuration for training hyperparameters and constants."""
-from dataclasses import dataclass, field
-from pathlib import Path
-
+from dataclasses import dataclass
 
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 32

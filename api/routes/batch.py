@@ -6,11 +6,11 @@ import time
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 
+from api.config import settings
 from api.dependencies import get_model, get_model_meta
 from api.middleware.rate_limit import BATCH_LIMIT, limiter
 from api.middleware.validation import validate_image_file
 from api.schemas import BatchPredictionResponse, PredictionResponse
-from api.config import settings
 from model.predict import predict_image
 
 logger = logging.getLogger(__name__)

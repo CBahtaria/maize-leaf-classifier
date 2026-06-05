@@ -17,7 +17,6 @@ import io
 import logging
 
 from fastapi import HTTPException, UploadFile
-
 from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)

@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -204,8 +205,12 @@ def generate_plots(
         axes[0].plot(epochs, hist.get("val_loss", []), "--", label=f"{phase} val", color=color, alpha=0.7)
         axes[1].plot(epochs, hist.get("accuracy", []), label=f"{phase} train", color=color)
         axes[1].plot(epochs, hist.get("val_accuracy", []), "--", label=f"{phase} val", color=color, alpha=0.7)
-    axes[0].set_title("Loss"); axes[0].legend(); axes[0].set_xlabel("Epoch")
-    axes[1].set_title("Accuracy"); axes[1].legend(); axes[1].set_xlabel("Epoch")
+    axes[0].set_title("Loss")
+    axes[0].legend()
+    axes[0].set_xlabel("Epoch")
+    axes[1].set_title("Accuracy")
+    axes[1].legend()
+    axes[1].set_xlabel("Epoch")
     fig.suptitle(f"Training History — {arch_name}")
     fig.savefig(output_dir / f"{arch_name}_training_history.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
