@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Date:** 2026-06-05
-**Author:** Project team
+**Author:** C.Bartaria
 
 ---
 

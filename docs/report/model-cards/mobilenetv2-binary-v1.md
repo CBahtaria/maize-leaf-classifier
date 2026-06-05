@@ -22,7 +22,7 @@ This model card follows the Google Model Cards reporting standard
 - **Inference latency:** ~50 ms on a mid-range Android device (Cortex-A73
   class CPU), ~200 ms for the equivalent Keras `.h5` on a server CPU.
 - **Training framework:** TensorFlow 2.15, Keras 3.
-- **Authors:** Project team.
+- **Author:** CBartaria.
 - **Date:** 2026-06-05.
 - **Version:** 1.0.0.
 - **License:** MIT.

@@ -24,15 +24,38 @@ Optional:
 
 ---
 
-## 2. Quick start (5 commands)
+## 2. Quick start
+
+### 2.1 One-command Docker dev environment (recommended, any OS)
+
+No local Python or Node required — both services run in containers.
+
+```bash
+# Linux / macOS
+git clone <repo> && cd maize-leaf-classifier
+docker compose -f docker/docker-compose.dev.yml up --build
+
+# Windows PowerShell
+git clone <repo>; cd maize-leaf-classifier
+docker compose -f docker/docker-compose.dev.yml up --build
+```
+
+- API: `http://localhost:8000` (auto-reloads on `api/` and `model/` changes)
+- Frontend: `http://localhost:5173` (Vite HMR, proxies `/predict*` to API
+  container via Docker DNS `api:8000`)
+
+The `frontend_node_modules` named volume keeps `node_modules` inside the
+container so Windows host paths never shadow it.
+
+### 2.2 Native setup (Python 3.11 + Node 20)
 
 ```bash
 git clone <repo> && cd maize-leaf-classifier
-python3.11 -m venv .venv && source .venv/bin/activate
+python3.11 -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt -r requirements-dev.txt
 uvicorn api.main:app --reload
 # In another terminal:
-cd frontend && npm ci && npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 The API serves on `http://localhost:8000`, the Vite dev server serves on
@@ -282,6 +305,27 @@ npm run preview    # serves dist/ on :4173
 Audit the PWA quality with Chrome DevTools → Lighthouse → "Progressive Web
 App" category. Target score ≥ 90.
 
+### 7.2.1 FAO-inspired design system
+
+The stylesheet (`frontend/src/styles/main.css`) follows the FAO
+(fao.org) institutional design language:
+
+| Token | Value | Usage |
+|---|---|---|
+| `--fao-blue` | `#0059AA` | Primary action color, header gradient |
+| `--fao-blue-dark` | `#003F87` | Header gradient start, hover state |
+| `--healthy` | `#1B7A3E` | Healthy diagnosis card header + fill |
+| `--diseased` | `#C0392B` | Diseased diagnosis card header + fill |
+
+Key component classes:
+- `.diagnosis-card--healthy / --diseased` — full-bleed colored header
+- `.upload-zone` — dashed-border dropzone with hover states
+- `.confidence-section` / `.confidence-track` / `.confidence-fill--*` — animated bar
+- `.history-table` / `.history-row` — 4-column grid (badge, %, time, offline)
+
+All color decisions are via CSS variables so a theme swap requires only
+editing the `:root {}` block in `main.css`.
+
 ### 7.3 Offline testing
 
 1. `npm run build && npm run preview`.
@@ -351,10 +395,27 @@ flips nginx. Failed health → no flip; production stays on the old slot.
 ### 9.3 Rollback
 
 ```bash
+# Linux / macOS
 bash scripts/rollback.sh
+
+# Windows PowerShell
+.\scripts\rollback.ps1
 ```
 
 Flips back immediately. No health check.
+
+### 9.3.1 Windows PowerShell scripts
+
+All shell scripts have PowerShell equivalents:
+
+| bash | PowerShell |
+|---|---|
+| `scripts/deploy.sh` | `scripts/deploy.ps1` |
+| `scripts/rollback.sh` | `scripts/rollback.ps1` |
+
+The PowerShell variants write nginx upstream config with LF line endings
+using `[System.IO.File]::WriteAllText` — required because nginx on Linux
+rejects files with Windows CRLF endings.
 
 ### 9.4 GitHub Secrets
 
@@ -471,10 +532,12 @@ Restart the API.
 
 ### `429 in tests`
 
-The mocked rate limiter in `tests/conftest.py` bypasses `slowapi`. Tests
-that hit the real app via `httpx.AsyncClient` and exceed 20 requests per
-minute **will** trip the limiter. Add a small `time.sleep` or break the
-test into smaller batches.
+The module-level `limiter` singleton in `api/middleware/rate_limit.py`
+persists its in-memory counter across the entire pytest session. The
+`conftest.py` `reset_rate_limiter` autouse fixture clears `limiter._storage`
+before every test so each test starts from zero. If you add a new test file
+that is **not** covered by the top-level `conftest.py`, import and apply the
+fixture explicitly, or move the test to the `tests/` tree.
 
 ### `Docker build fails on ARM`
 

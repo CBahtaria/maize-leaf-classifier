@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-05
 **Status:** Approved (implementation in progress)
-**Author:** Project team
+**Author:** CBartaria
 **Repo:** maize-leaf-classifier
 **Branch:** feature/initial-implementation
 
