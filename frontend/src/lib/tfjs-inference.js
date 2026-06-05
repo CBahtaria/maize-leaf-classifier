@@ -37,17 +37,17 @@ export async function predictOffline(canvas) {
   // model.preprocess_input (FIX-1) is embedded in the SavedModel graph.
   const batched = tensor.expandDims(0).cast('float32');
   const prediction = _model.predict(batched);
-  const prob = (await prediction.data())[0];
-
-  // Cleanup tensors to prevent memory leaks
-  tensor.dispose();
-  batched.dispose();
-  prediction.dispose();
-
-  return {
-    label: prob >= 0.5 ? 'Diseased' : 'Healthy',
-    confidence: prob >= 0.5 ? prob : 1 - prob,
-    processing_time_ms: 0,
-    isOffline: true,
-  };
+  try {
+    const prob = (await prediction.data())[0];
+    return {
+      label: prob >= 0.5 ? 'Diseased' : 'Healthy',
+      confidence: prob >= 0.5 ? prob : 1 - prob,
+      processing_time_ms: 0,
+      isOffline: true,
+    };
+  } finally {
+    tensor.dispose();
+    batched.dispose();
+    prediction.dispose();
+  }
 }

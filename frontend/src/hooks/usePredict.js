@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { predictImage } from '../lib/api.js';
 
 export function usePredict() {
@@ -6,8 +6,11 @@ export function usePredict() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
+  const predictingRef = useRef(false);
 
   async function predict(blob) {
+    if (predictingRef.current) return;
+    predictingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -21,7 +24,14 @@ export function usePredict() {
         const { predictOffline } = await import('../lib/tfjs-inference.js');
         // predictOffline needs a canvas — pass blob as ImageBitmap
         const bitmap = await createImageBitmap(blob);
-        const offlineCanvas = new OffscreenCanvas(224, 224);
+        let offlineCanvas;
+        if (typeof OffscreenCanvas !== 'undefined') {
+          offlineCanvas = new OffscreenCanvas(224, 224);
+        } else {
+          offlineCanvas = document.createElement('canvas');
+          offlineCanvas.width = 224;
+          offlineCanvas.height = 224;
+        }
         const ctx = offlineCanvas.getContext('2d');
         ctx.drawImage(bitmap, 0, 0, 224, 224);
         const offlineResult = await predictOffline(offlineCanvas);
@@ -37,6 +47,7 @@ export function usePredict() {
         });
       }
     } finally {
+      predictingRef.current = false;
       setLoading(false);
     }
   }
