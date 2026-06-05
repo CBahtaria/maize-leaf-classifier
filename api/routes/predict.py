@@ -1,7 +1,7 @@
 """POST /predict — single image binary classification endpoint."""
 import logging
 
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 
 from api.config import settings
 from api.dependencies import get_model, get_model_meta
@@ -29,6 +29,7 @@ router = APIRouter()
 @limiter.limit(PREDICT_LIMIT)
 async def predict(
     request: Request,
+    response: Response,
     file: UploadFile = File(..., description="Leaf image (JPEG/PNG/WebP, max 10 MB)"),
     model=Depends(get_model),
     model_meta: dict = Depends(get_model_meta),

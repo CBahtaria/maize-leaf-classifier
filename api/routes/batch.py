@@ -2,7 +2,7 @@
 import logging
 import time
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 
 from api.config import settings
 from api.dependencies import get_model, get_model_meta
@@ -33,6 +33,7 @@ MAX_BATCH_SIZE = 10
 @limiter.limit(BATCH_LIMIT)
 async def predict_batch(
     request: Request,
+    response: Response,
     files: list[UploadFile] = File(..., description=f"Up to {MAX_BATCH_SIZE} leaf images"),
     model=Depends(get_model),
     model_meta: dict = Depends(get_model_meta),
