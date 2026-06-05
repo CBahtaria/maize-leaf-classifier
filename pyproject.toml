@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "maize-leaf-classifier"
+version = "0.1.0"
+description = "Lightweight binary CNN for healthy vs. diseased maize leaf detection"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+ignore_missing_imports = true
