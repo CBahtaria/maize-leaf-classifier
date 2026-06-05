@@ -7,6 +7,7 @@ import io
 import logging
 import time
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import tensorflow as tf
@@ -22,8 +23,8 @@ class ModelWrapper:
 
     def __init__(self, model_path: str | Path) -> None:
         self.model_path = Path(model_path)
-        self._model = None
-        self._interpreter = None
+        self._model: Any = None
+        self._interpreter: Any = None
         self._is_tflite = self.model_path.suffix == ".tflite"
         self._load()
 
@@ -80,7 +81,7 @@ def predict_image(model: ModelWrapper, image_bytes: bytes) -> dict:
 
     # Load and resize image to 224×224 — no normalization (model handles it)
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    img = img.resize(IMG_SIZE, Image.BILINEAR)
+    img = img.resize(IMG_SIZE, Image.Resampling.BILINEAR)
     img_array = np.array(img, dtype=np.float32)  # [0, 255] — preprocess_fn in model handles rest
 
     confidence = model.predict_raw(img_array)

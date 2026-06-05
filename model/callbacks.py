@@ -7,6 +7,7 @@ FIX-4: LinearWarmupCallback implements the learning rate warmup described in
 import csv
 import logging
 from pathlib import Path
+from typing import IO
 
 import tensorflow as tf
 
@@ -60,7 +61,7 @@ class CSVEpochLogger(tf.keras.callbacks.Callback):
         self.filepath = Path(filepath)
         self.phase = phase
         self._writer: csv.DictWriter | None = None
-        self._file = None
+        self._file: IO[str] | None = None
 
     def on_train_begin(self, logs: dict | None = None) -> None:
         self.filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +85,7 @@ class CSVEpochLogger(tf.keras.callbacks.Callback):
             "val_accuracy": logs.get("val_accuracy", ""),
             "lr": lr,
         }
-        if self._writer:
+        if self._writer and self._file:
             self._writer.writerow(row)
             self._file.flush()
 

@@ -5,7 +5,9 @@ parameter rather than hardcoding /255 normalization (which would be wrong for al
 FIX-2 — Uses tf.data.Dataset instead of deprecated ImageDataGenerator.
 """
 import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import tensorflow as tf
@@ -126,7 +128,7 @@ def _load_image(path: tf.Tensor, label: tf.Tensor, img_size: tuple[int, int]) ->
 def build_tf_dataset(
     paths: list[str],
     labels: list[int],
-    preprocess_fn: callable,
+    preprocess_fn: Callable[..., Any],
     augment: bool,
     batch_size: int = BATCH_SIZE,
     img_size: tuple[int, int] = IMG_SIZE,
