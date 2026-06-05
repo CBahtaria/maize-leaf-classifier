@@ -18,12 +18,10 @@ export default function CameraCapture({ onResult }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Show thumbnail preview
     const objectUrl = URL.createObjectURL(file);
     prevPreviewRef.current = objectUrl;
     setPreview(objectUrl);
 
-    // Draw image to canvas at 224×224 for resize
     const img = new Image();
     img.onload = () => {
       const canvas = canvasRef.current;
@@ -45,7 +43,6 @@ export default function CameraCapture({ onResult }) {
   async function submitBlob(blob) {
     setLoading(true);
 
-    // Offline / no connectivity path
     if (!navigator.onLine) {
       setLoading(false);
       onResult({ label: 'Unknown', confidence: 0.5, processing_time_ms: 0, isOffline: true });
@@ -56,14 +53,8 @@ export default function CameraCapture({ onResult }) {
       const formData = new FormData();
       formData.append('file', blob, 'leaf.jpg');
 
-      const response = await fetch('/predict', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
-      }
+      const response = await fetch('/predict', { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`Server responded with ${response.status}`);
 
       const data = await response.json();
       onResult({
@@ -73,7 +64,6 @@ export default function CameraCapture({ onResult }) {
         isOffline: false,
       });
     } catch {
-      // Network error fallback
       onResult({ label: 'Unknown', confidence: 0.5, processing_time_ms: 0, isOffline: true });
     } finally {
       setLoading(false);
@@ -81,7 +71,7 @@ export default function CameraCapture({ onResult }) {
   }
 
   return (
-    <div className="card">
+    <div>
       <input
         ref={fileInputRef}
         type="file"
@@ -91,28 +81,39 @@ export default function CameraCapture({ onResult }) {
         aria-label="Select leaf image"
         onChange={handleFileChange}
       />
-
-      {/* Hidden canvas used for resizing to 224×224 */}
       <canvas ref={canvasRef} width={224} height={224} style={{ display: 'none' }} />
 
-      {preview && (
-        <img
-          src={preview}
-          alt="Selected leaf preview"
-          className="camera-preview"
-        />
-      )}
+      <div
+        className="upload-zone"
+        onClick={() => !loading && fileInputRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        aria-label="Click to select a leaf image"
+        onKeyDown={(e) => e.key === 'Enter' && !loading && fileInputRef.current?.click()}
+      >
+        {preview ? (
+          <img src={preview} alt="Selected leaf preview" className="upload-preview" />
+        ) : (
+          <div className="upload-placeholder">
+            <span className="upload-icon">🍃</span>
+            <p className="upload-text">Tap to photograph a leaf</p>
+            <p className="upload-hint">JPEG, PNG or WebP · max 10 MB</p>
+          </div>
+        )}
+      </div>
 
-      {loading && <div className="spinner" role="status" aria-label="Processing image" />}
-
-      {!loading && (
+      {loading ? (
+        <div className="spinner-wrap">
+          <div className="spinner" role="status" aria-label="Processing image" />
+          <span>Analysing leaf…</span>
+        </div>
+      ) : (
         <button
           className="btn btn-primary"
-          style={{ minHeight: '48px' }}
           aria-label="Scan Leaf"
-          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+          onClick={() => fileInputRef.current?.click()}
         >
-          Scan Leaf
+          {preview ? '🔄 Scan Again' : '📷 Scan Leaf'}
         </button>
       )}
     </div>

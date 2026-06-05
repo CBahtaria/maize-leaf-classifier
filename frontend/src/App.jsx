@@ -17,7 +17,7 @@ export default function App() {
 
   function handleResult(result) {
     const entry = { ...result, timestamp: new Date().toISOString() };
-    const updated = [entry, ...history].slice(0, 20); // keep last 20
+    const updated = [entry, ...history].slice(0, 20);
     setHistory(updated);
     try { localStorage.setItem('maizescan_history', JSON.stringify(updated)); } catch {}
     setPrediction(entry);
@@ -34,16 +34,21 @@ export default function App() {
       <OfflineBanner />
 
       <header className="app-header">
-        <span className="app-logo">🌽</span>
-        <h1 className="app-title">MaizeScan</h1>
+        <div className="app-header__brand">
+          <span className="app-header__icon">🌽</span>
+          <div>
+            <div className="app-header__title">MaizeScan</div>
+            <div className="app-header__subtitle">Crop Disease Detection</div>
+          </div>
+        </div>
         <nav className="app-nav">
           <button
-            className={`nav-btn${view === 'scan' || view === 'result' ? ' active' : ''}`}
+            className={`nav-btn${view === 'scan' || view === 'result' ? ' nav-btn--active' : ''}`}
             onClick={() => { setPrediction(null); setView('scan'); }}
             aria-label="Scan"
           >Scan</button>
           <button
-            className={`nav-btn${view === 'history' ? ' active' : ''}`}
+            className={`nav-btn${view === 'history' ? ' nav-btn--active' : ''}`}
             onClick={() => setView('history')}
             aria-label="History"
           >History</button>
@@ -64,7 +69,12 @@ export default function App() {
       </main>
 
       <footer className="app-footer">
-        <p>Binary maize leaf disease classifier for SSA farmers</p>
+        <div className="app-footer__fao">
+          <span>🌾</span>
+          <span>Supporting smallholder farmers in Sub-Saharan Africa</span>
+        </div>
+        <div className="app-footer__divider" />
+        <span>Binary maize leaf disease classifier · Offline-capable PWA</span>
       </footer>
     </div>
   );

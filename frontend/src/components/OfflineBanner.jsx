@@ -19,7 +19,8 @@ export default function OfflineBanner() {
   if (isOnline) return null;
 
   return (
-    <div className="offline-banner">
+    <div className="offline-banner" role="alert">
+      <span className="offline-banner__dot" aria-hidden="true" />
       Offline mode — using on-device model
     </div>
   );

@@ -1,25 +1,26 @@
 import React from 'react';
 
 export default function ConfidenceBar({ value, label }) {
-  const fillClass =
-    label === 'Healthy'
-      ? 'confidence-bar__fill--healthy'
-      : 'confidence-bar__fill--diseased';
+  const isHealthy = label === 'Healthy';
+  const fillClass = isHealthy ? 'confidence-fill confidence-fill--healthy' : 'confidence-fill confidence-fill--diseased';
+  const pct = Math.round(value * 100);
 
   return (
-    <>
-      <div className="confidence-bar">
-        <div
-          className={`confidence-bar__fill ${fillClass}`}
-          style={{ width: `${value * 100}%` }}
-          role="progressbar"
-          aria-valuenow={Math.round(value * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${label} confidence`}
-        />
+    <div className="confidence-section">
+      <label>
+        Confidence
+        <span>{pct}%</span>
+      </label>
+      <div
+        className="confidence-track"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`${label} confidence`}
+      >
+        <div className={fillClass} style={{ width: `${pct}%` }} />
       </div>
-      <span>{Math.round(value * 100)}%</span>
-    </>
+    </div>
   );
 }
