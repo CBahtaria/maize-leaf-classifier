@@ -1,17 +1,26 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 export default function CameraCapture({ onResult }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const prevPreviewRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current);
+    };
+  }, []);
 
   function handleFileChange(e) {
+    if (prevPreviewRef.current) URL.revokeObjectURL(prevPreviewRef.current);
     const file = e.target.files[0];
     if (!file) return;
 
     // Show thumbnail preview
     const objectUrl = URL.createObjectURL(file);
+    prevPreviewRef.current = objectUrl;
     setPreview(objectUrl);
 
     // Draw image to canvas at 224×224 for resize
@@ -22,6 +31,11 @@ export default function CameraCapture({ onResult }) {
       ctx.drawImage(img, 0, 0, 224, 224);
 
       canvas.toBlob(async (blob) => {
+        if (!blob) {
+          onResult({ label: 'Unknown', confidence: 0.5, processing_time_ms: 0, isOffline: true });
+          setLoading(false);
+          return;
+        }
         await submitBlob(blob);
       }, 'image/jpeg', 0.85);
     };
@@ -74,6 +88,7 @@ export default function CameraCapture({ onResult }) {
         accept="image/*"
         capture="environment"
         style={{ display: 'none' }}
+        aria-label="Select leaf image"
         onChange={handleFileChange}
       />
 
