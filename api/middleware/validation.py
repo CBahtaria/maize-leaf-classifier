@@ -11,8 +11,6 @@ Security hardening for file upload endpoint:
 Privacy note: Field photos from SSA farmers often contain GPS EXIF metadata. Converting
 to RGB via PIL strips all metadata before inference, protecting farmer privacy.
 """
-from __future__ import annotations
-
 import io
 import logging
 

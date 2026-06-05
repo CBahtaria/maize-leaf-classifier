@@ -1,6 +1,4 @@
 """API configuration via environment variables using pydantic-settings."""
-from __future__ import annotations
-
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

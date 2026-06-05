@@ -1,6 +1,4 @@
 """POST /predict/batch — batch image classification (up to 10 images)."""
-from __future__ import annotations
-
 import logging
 import time
 

@@ -1,6 +1,4 @@
 """GET /health and GET /model/info — liveness and model metadata endpoints."""
-from __future__ import annotations
-
 import time
 
 from fastapi import APIRouter, Request

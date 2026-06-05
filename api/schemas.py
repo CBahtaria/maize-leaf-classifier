@@ -1,6 +1,4 @@
 """Pydantic request and response schemas for the prediction API."""
-from __future__ import annotations
-
 from typing import Literal
 
 from pydantic import BaseModel, Field

@@ -12,8 +12,6 @@ Security:
   - File validation in middleware (MIME, size, PIL verify, EXIF strip)
   - Non-root user in Docker
 """
-from __future__ import annotations
-
 import logging
 import time
 from contextlib import asynccontextmanager

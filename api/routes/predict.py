@@ -1,6 +1,4 @@
 """POST /predict — single image binary classification endpoint."""
-from __future__ import annotations
-
 import logging
 
 from fastapi import APIRouter, Depends, File, Request, UploadFile
