@@ -43,7 +43,7 @@ def evaluate_classification(model: tf.keras.Model, test_ds: tf.data.Dataset) -> 
 
     y_true = np.array(y_true, dtype=int)  # type: ignore[assignment]
     y_scores = np.array(y_scores, dtype=float)  # type: ignore[assignment]
-    y_pred = (y_scores >= 0.5).astype(int)
+    y_pred = (y_scores >= 0.5).astype(int)  # type: ignore[operator]
 
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
     n = len(y_true)
