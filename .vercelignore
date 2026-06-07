@@ -1,0 +1,10 @@
+# Exclude Python backend — only the frontend deploys to Vercel
+api/
+model/
+tests/
+docker/
+scripts/
+pyproject.toml
+requirements*.txt
+*.py
+uv.lock
