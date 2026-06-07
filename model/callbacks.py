@@ -40,13 +40,13 @@ class LinearWarmupCallback(tf.keras.callbacks.Callback):
             # Linear interpolation from start_lr to base_lr
             progress = epoch / self.warmup_epochs
             lr = self.start_lr + progress * (self.base_lr - self.start_lr)
-            tf.keras.backend.set_value(self.model.optimizer.learning_rate, lr)
+            self.model.optimizer.learning_rate.assign(lr)
             logger.debug("Warmup epoch %d: LR set to %.2e", epoch, lr)
 
     def on_epoch_end(self, epoch: int, logs: dict | None = None) -> None:
         if epoch == self.warmup_epochs - 1:
             # Ensure LR is exactly base_lr after warmup completes
-            tf.keras.backend.set_value(self.model.optimizer.learning_rate, self.base_lr)
+            self.model.optimizer.learning_rate.assign(self.base_lr)
             logger.info("LR warmup complete. LR = %.2e", self.base_lr)
 
 
