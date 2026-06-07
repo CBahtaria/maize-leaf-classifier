@@ -1,0 +1,11 @@
+# Minimal production requirements for the FastAPI inference server.
+# Full tensorflow is NOT needed here — ai-edge-litert (4 MB) runs TFLite models.
+# Install on the VPS / Render / Railway with:  pip install -r requirements-api.txt
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+Pillow==10.3.0
+numpy==1.26.4
+slowapi==0.1.9
+pydantic-settings==2.2.1
+ai-edge-litert>=1.0.1

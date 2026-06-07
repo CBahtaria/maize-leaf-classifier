@@ -2,6 +2,9 @@
 
 Supports both .keras and .tflite models. Preprocessing is embedded in the model (FIX-1),
 so this module passes raw image bytes with NO manual normalization.
+
+Production deployments use TFLite via ai-edge-litert (4 MB) or tflite-runtime.
+Full TensorFlow is only needed when loading .keras models (development/training).
 """
 import io
 import logging
@@ -10,12 +13,24 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import tensorflow as tf
 from PIL import Image
 
 from model.config import CLASS_LABEL, IMG_SIZE
 
 logger = logging.getLogger(__name__)
+
+# TFLite Interpreter — prefer the lightweight runtime; fall back to full TF.
+try:
+    from ai_edge_litert.interpreter import Interpreter as TFLiteInterpreter
+    logger.debug("Using ai-edge-litert TFLite runtime")
+except ImportError:
+    try:
+        from tflite_runtime.interpreter import Interpreter as TFLiteInterpreter  # type: ignore[no-redef,assignment]
+        logger.debug("Using tflite-runtime TFLite runtime")
+    except ImportError:
+        import tensorflow as tf  # type: ignore[assignment]
+        TFLiteInterpreter = tf.lite.Interpreter  # type: ignore[assignment]
+        logger.debug("Using tensorflow TFLite runtime (heavy — consider ai-edge-litert)")
 
 
 class ModelWrapper:
@@ -30,13 +45,15 @@ class ModelWrapper:
 
     def _load(self) -> None:
         if self._is_tflite:
-            self._interpreter = tf.lite.Interpreter(model_path=str(self.model_path))
+            self._interpreter = TFLiteInterpreter(model_path=str(self.model_path))
             self._interpreter.allocate_tensors()
             self._input_details = self._interpreter.get_input_details()
             self._output_details = self._interpreter.get_output_details()
             self._input_dtype = self._input_details[0]["dtype"]
             logger.info("Loaded TFLite model: %s", self.model_path)
         else:
+            # .keras model — only used in development; requires full TensorFlow
+            import tensorflow as tf  # noqa: PLC0415
             self._model = tf.keras.models.load_model(str(self.model_path))
             logger.info("Loaded Keras model: %s", self.model_path)
 
@@ -79,7 +96,6 @@ def predict_image(model: ModelWrapper, image_bytes: bytes) -> dict:
     """
     start = time.perf_counter()
 
-    # Load and resize image to 224×224 — no normalization (model handles it)
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     img = img.resize(IMG_SIZE, Image.Resampling.BILINEAR)
     img_array = np.array(img, dtype=np.float32)  # [0, 255] — preprocess_fn in model handles rest

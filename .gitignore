@@ -19,7 +19,8 @@ htmlcov/
 *.h5
 *.tflite
 *.bin
-model_artifacts/
+model_artifacts/*
+!model_artifacts/.gitkeep
 
 # Node
 node_modules/
@@ -40,3 +41,4 @@ Thumbs.db
 
 # Deployment state
 .active-slot
+.vercel

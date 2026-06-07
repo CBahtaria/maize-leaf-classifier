@@ -1,6 +1,10 @@
 """Central configuration for training hyperparameters and constants."""
 from dataclasses import dataclass
 
+# InceptionV3 canonical input is 299×299. This was initially set to 224×224 (MobileNetV2).
+# Change to (299, 299) before the next training run, then retrain and re-export the TFLite model.
+# Both the API (model/predict.py) and the training pipeline use this constant, so one change
+# propagates everywhere. The frontend canvas size (CameraCapture.jsx CANVAS_SIZE) must match.
 IMG_SIZE = (224, 224)
 BATCH_SIZE = 32
 SEED = 42

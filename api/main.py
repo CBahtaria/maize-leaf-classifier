@@ -14,7 +14,9 @@ Security:
 """
 import logging
 import time
+import urllib.request
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,9 +34,27 @@ logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address, default_limits=[])
 
 
+def _download_model_if_needed() -> None:
+    """Download model artifact from MODEL_DOWNLOAD_URL if the local file is missing."""
+    if not settings.MODEL_DOWNLOAD_URL:
+        return
+    dest = Path(settings.MODEL_PATH)
+    if dest.exists():
+        logger.info("Model already present at %s — skipping download", dest)
+        return
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    logger.info("Downloading model from %s → %s", settings.MODEL_DOWNLOAD_URL, dest)
+    urllib.request.urlretrieve(settings.MODEL_DOWNLOAD_URL, dest)
+    logger.info("Download complete: %s (%.1f MB)", dest, dest.stat().st_size / 1_048_576)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load model on startup; clean up on shutdown."""
+    """Download model if needed, load it, then clean up on shutdown."""
+    try:
+        _download_model_if_needed()
+    except Exception as exc:
+        logger.error("Model download failed: %s", exc)
     logger.info("Loading model from %s", settings.MODEL_PATH)
     try:
         load_model(settings.MODEL_PATH, settings.MODEL_META_PATH)

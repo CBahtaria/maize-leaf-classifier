@@ -6,8 +6,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # Model paths
-    MODEL_PATH: str = "model_artifacts/mobilenetv2_best.tflite"
-    MODEL_META_PATH: str = "model_artifacts/mobilenetv2_meta.json"
+    MODEL_PATH: str = "model_artifacts/inceptionv3_best.tflite"
+    MODEL_META_PATH: str = "model_artifacts/inceptionv3_meta.json"
+    # Optional URL to download the model at startup (e.g. GitHub Releases asset)
+    MODEL_DOWNLOAD_URL: str | None = None
 
     # Security
     MAX_FILE_SIZE_MB: int = 10
