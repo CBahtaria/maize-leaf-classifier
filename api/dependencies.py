@@ -1,11 +1,15 @@
 """FastAPI dependency injection: shared model wrapper singleton."""
+from __future__ import annotations
+
 import json
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
 
-from model.predict import ModelWrapper
+if TYPE_CHECKING:
+    from model.predict import ModelWrapper
 
 logger = logging.getLogger(__name__)
 

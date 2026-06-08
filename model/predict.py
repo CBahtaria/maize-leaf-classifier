@@ -19,18 +19,28 @@ from model.config import CLASS_LABEL, IMG_SIZE
 
 logger = logging.getLogger(__name__)
 
-# TFLite Interpreter — prefer the lightweight runtime; fall back to full TF.
-try:
-    from ai_edge_litert.interpreter import Interpreter as TFLiteInterpreter
-    logger.debug("Using ai-edge-litert TFLite runtime")
-except ImportError:
+
+def _get_tflite_interpreter_cls() -> type:
+    """Resolve the TFLite Interpreter class at call time (not import time).
+
+    Deferred so that importing model.predict never fails in environments
+    that have none of the three runtimes installed (e.g. during testing).
+    """
     try:
-        from tflite_runtime.interpreter import Interpreter as TFLiteInterpreter  # type: ignore[no-redef,assignment]
-        logger.debug("Using tflite-runtime TFLite runtime")
+        from ai_edge_litert.interpreter import Interpreter  # type: ignore[import-not-found]
+        logger.debug("Using ai-edge-litert TFLite runtime")
+        return Interpreter
     except ImportError:
-        import tensorflow as tf  # type: ignore[assignment]
-        TFLiteInterpreter = tf.lite.Interpreter  # type: ignore[assignment]
-        logger.debug("Using tensorflow TFLite runtime (heavy — consider ai-edge-litert)")
+        pass
+    try:
+        from tflite_runtime.interpreter import Interpreter  # type: ignore[import-not-found,no-redef]
+        logger.debug("Using tflite-runtime TFLite runtime")
+        return Interpreter
+    except ImportError:
+        pass
+    import tensorflow as tf  # type: ignore[import-not-found]
+    logger.debug("Using tensorflow TFLite runtime (heavy — consider ai-edge-litert)")
+    return tf.lite.Interpreter  # type: ignore[return-value]
 
 
 class ModelWrapper:
@@ -45,6 +55,7 @@ class ModelWrapper:
 
     def _load(self) -> None:
         if self._is_tflite:
+            TFLiteInterpreter = _get_tflite_interpreter_cls()
             self._interpreter = TFLiteInterpreter(model_path=str(self.model_path))
             self._interpreter.allocate_tensors()
             self._input_details = self._interpreter.get_input_details()

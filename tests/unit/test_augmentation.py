@@ -1,7 +1,9 @@
 import numpy as np
-import tensorflow as tf
+import pytest
 
-from model.augmentation import get_augmentation_layer
+tf = pytest.importorskip("tensorflow", reason="TensorFlow not installed")
+
+from model.augmentation import get_augmentation_layer  # noqa: E402
 
 
 def test_augmentation_preserves_shape():

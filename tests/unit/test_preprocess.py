@@ -1,9 +1,11 @@
 """Unit tests for model/preprocess.py — validates FIX-1, FIX-2 fixes."""
 import numpy as np
+import pytest
 
 
 def test_mobilenetv2_preprocess_range():
     """FIX-1: MobileNetV2 preprocess_input must produce values in [-1, 1], not [0, 1]."""
+    pytest.importorskip("tensorflow", reason="TensorFlow not installed")
     from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
     img = np.random.randint(0, 256, (224, 224, 3), dtype=np.uint8).astype("float32")
     out = preprocess_input(img.copy())
@@ -13,6 +15,7 @@ def test_mobilenetv2_preprocess_range():
 
 def test_vgg16_preprocess_mean_subtracted():
     """FIX-1: VGG16 preprocess_input subtracts ImageNet means, not /255."""
+    pytest.importorskip("tensorflow", reason="TensorFlow not installed")
     from tensorflow.keras.applications.vgg16 import preprocess_input
     img = np.random.randint(0, 256, (100, 224, 224, 3), dtype=np.uint8).astype("float32")
     out = preprocess_input(img.copy())

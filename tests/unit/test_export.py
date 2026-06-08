@@ -3,9 +3,10 @@ import tempfile
 
 import numpy as np
 import pytest
-import tensorflow as tf
 
-from model.export import export_tflite
+tf = pytest.importorskip("tensorflow", reason="TensorFlow not installed")
+
+from model.export import export_tflite  # noqa: E402
 
 
 def _tiny_model() -> tf.keras.Model:

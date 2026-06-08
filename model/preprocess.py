@@ -8,16 +8,11 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import tensorflow as tf
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from model.config import BATCH_SIZE, CHANNELS, IMG_SIZE, SEED, SUPPORTED_EXTENSIONS
 
-
-
 logger = logging.getLogger(__name__)
-
-AUTOTUNE = tf.data.AUTOTUNE
 
 
 def binary_map(label: str) -> int:
@@ -111,13 +106,14 @@ def compute_class_weights(labels: list[int]) -> dict[int, float]:
     return weights
 
 
-def _load_image(path: tf.Tensor, label: tf.Tensor, img_size: tuple[int, int]) -> tuple[tf.Tensor, tf.Tensor]:
+def _load_image(path: object, label: object, img_size: tuple[int, int]) -> tuple:
     """Load, decode, and resize a single image. Returns float32 tensor in [0,255].
 
     NOTE: We return [0,255] uint8-cast-to-float here. The architecture-specific
     preprocess_fn (FIX-1) is applied as a model-embedded Lambda layer, NOT here.
     This keeps the preprocessing self-contained within the model artefact.
     """
+    import tensorflow as tf  # lazy: only needed during training, not at API import time
     raw = tf.io.read_file(path)
     img = tf.image.decode_jpeg(raw, channels=CHANNELS)
     img = tf.image.resize(img, img_size)
@@ -131,7 +127,7 @@ def build_tf_dataset(
     augment: bool,
     batch_size: int = BATCH_SIZE,
     img_size: tuple[int, int] = IMG_SIZE,
-) -> tf.data.Dataset:
+) -> object:
     """Build a tf.data.Dataset pipeline yielding raw [0,255] float32 images.
 
     FIX-1: preprocessing is embedded as the first Lambda layer inside the Keras model
@@ -150,21 +146,23 @@ def build_tf_dataset(
     Returns:
         Batched, prefetched tf.data.Dataset yielding (raw_float32_image, label_tensor).
     """
+    import tensorflow as tf  # lazy: only needed during training, not at API import time
     from model.augmentation import get_augmentation_layer
 
+    autotune = tf.data.AUTOTUNE
     path_ds = tf.data.Dataset.from_tensor_slices((paths, labels))
     path_ds = path_ds.shuffle(len(paths), seed=SEED, reshuffle_each_iteration=True) if augment else path_ds
 
     def load_fn(p, lbl):
         return _load_image(p, lbl, img_size)
 
-    ds = path_ds.map(load_fn, num_parallel_calls=AUTOTUNE)
+    ds = path_ds.map(load_fn, num_parallel_calls=autotune)
 
     if augment:
         aug_layer = get_augmentation_layer()
         ds = ds.map(
             lambda img, lbl: (aug_layer(img, training=True), lbl),
-            num_parallel_calls=AUTOTUNE,
+            num_parallel_calls=autotune,
         )
 
     ds = ds.batch(batch_size).prefetch(AUTOTUNE)
