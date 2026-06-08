@@ -6,8 +6,8 @@ set -euo pipefail
 TARGET="${1:-}"
 LOCAL_DIR="model_artifacts"
 REMOTE_DIR="/opt/maize-leaf-classifier/model_artifacts"
-TFLITE="mobilenetv2_best.tflite"
-META="mobilenetv2_meta.json"
+TFLITE="inceptionv3_best.tflite"
+META="inceptionv3_meta.json"
 
 die() { printf '\033[1;31m[ERROR]\033[0m %s\n' "$*" >&2; exit 1; }
 info() { printf '\033[1;34m[INFO]\033[0m  %s\n' "$*"; }

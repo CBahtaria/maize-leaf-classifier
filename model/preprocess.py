@@ -146,7 +146,7 @@ def build_tf_dataset(
     Returns:
         Batched, prefetched tf.data.Dataset yielding (raw_float32_image, label_tensor).
     """
-    import tensorflow as tf  # lazy: only needed during training, not at API import time
+    import tensorflow as tf  # lazy — deferred so pure-Python functions import without TF installed  # noqa: I001
     from model.augmentation import get_augmentation_layer
 
     autotune = tf.data.AUTOTUNE
@@ -165,5 +165,5 @@ def build_tf_dataset(
             num_parallel_calls=autotune,
         )
 
-    ds = ds.batch(batch_size).prefetch(AUTOTUNE)
+    ds = ds.batch(batch_size).prefetch(autotune)
     return ds

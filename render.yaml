@@ -3,6 +3,7 @@ services:
     name: maizescan-api
     runtime: python
     plan: free
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements-api.txt && pip install -e . --no-deps
     startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
@@ -12,9 +13,9 @@ services:
       - key: MODEL_META_PATH
         value: model_artifacts/inceptionv3_meta.json
       - key: MODEL_DOWNLOAD_URL
-        sync: false        # set this manually in Render dashboard → Environment
+        sync: false        # paste GitHub Releases URL after running scripts/release-model.sh
       - key: ALLOWED_ORIGINS
-        sync: false        # set to your Vercel URL, e.g. https://maizescan.vercel.app
+        value: '["https://maizescan.vercel.app","https://maize-leaf-classifier.vercel.app"]'
       - key: LOG_LEVEL
         value: INFO
       - key: DEBUG

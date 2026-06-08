@@ -33,7 +33,7 @@ def _get_tflite_interpreter_cls() -> type:
     except ImportError:
         pass
     try:
-        from tflite_runtime.interpreter import Interpreter  # type: ignore[import-not-found,no-redef]
+        from tflite_runtime.interpreter import Interpreter  # type: ignore[import-not-found,no-redef]  # noqa: I001
         logger.debug("Using tflite-runtime TFLite runtime")
         return Interpreter
     except ImportError:
@@ -55,8 +55,8 @@ class ModelWrapper:
 
     def _load(self) -> None:
         if self._is_tflite:
-            TFLiteInterpreter = _get_tflite_interpreter_cls()
-            self._interpreter = TFLiteInterpreter(model_path=str(self.model_path))
+            interpreter_cls = _get_tflite_interpreter_cls()
+            self._interpreter = interpreter_cls(model_path=str(self.model_path))
             self._interpreter.allocate_tensors()
             self._input_details = self._interpreter.get_input_details()
             self._output_details = self._interpreter.get_output_details()

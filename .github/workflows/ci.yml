@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   python-checks:
@@ -17,19 +19,26 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+        # requirements-api.txt: lightweight production deps (no TF — ai-edge-litert only)
+        # requirements-dev.txt: pytest, ruff, mypy, httpx
+        # -e . --no-deps: makes model.* and api.* importable without reinstalling deps
+        run: |
+          pip install -r requirements-api.txt -r requirements-dev.txt
+          pip install -e . --no-deps
 
-      - name: Ruff lint
-        run: ruff check .
+      - name: Ruff lint (source only — notebooks excluded)
+        run: ruff check api/ model/ tests/
 
       - name: Mypy type check
-        run: mypy api/ model/
+        run: mypy api/ model/ --ignore-missing-imports
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
         env:
-          MODEL_PATH: model_artifacts/mobilenetv2_best.tflite
-          MODEL_META_PATH: model_artifacts/mobilenetv2_meta.json
+          # TF-dependent unit tests are skipped via pytest.importorskip when TF absent.
+          # Integration tests mock the model — no model file needed.
+          MODEL_PATH: model_artifacts/inceptionv3_best.tflite
+          MODEL_META_PATH: model_artifacts/inceptionv3_meta.json
 
   frontend-checks:
     strategy:
