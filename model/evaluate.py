@@ -33,17 +33,19 @@ def evaluate_classification(model: tf.keras.Model, test_ds: tf.data.Dataset) -> 
     """Compute all classification metrics on a test dataset.
 
     Returns dict with: accuracy, precision, sensitivity, specificity, f1, auc_roc,
-                       confusion_matrix (2x2 array), wilson_ci_95 (lower, upper).
+                       confusion_matrix, wilson_ci_95, y_true, y_pred, y_scores.
+    y_true/y_pred/y_scores are included so generate_plots() can draw the ROC curve
+    without needing a second pass over the dataset.
     """
-    y_true, y_scores = [], []
+    y_true_list, y_scores_list = [], []
     for images, labels in test_ds:
         preds = model.predict(images, verbose=0)
-        y_scores.extend(preds.flatten().tolist())
-        y_true.extend(labels.numpy().tolist())
+        y_scores_list.extend(preds.flatten().tolist())
+        y_true_list.extend(labels.numpy().tolist())
 
-    y_true = np.array(y_true, dtype=int)  # type: ignore[assignment]
-    y_scores = np.array(y_scores, dtype=float)  # type: ignore[assignment]
-    y_pred = (y_scores >= 0.5).astype(int)  # type: ignore[operator]
+    y_true = np.array(y_true_list, dtype=int)
+    y_scores = np.array(y_scores_list, dtype=float)
+    y_pred = (y_scores >= 0.5).astype(int)
 
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
     n = len(y_true)
@@ -67,6 +69,10 @@ def evaluate_classification(model: tf.keras.Model, test_ds: tf.data.Dataset) -> 
         "n_test": int(n),
         "wilson_ci_95": (float(ci_lower), float(ci_upper)),
         "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+        # Raw arrays for generate_plots — excluded from meta JSON in train.py
+        "y_true": y_true.tolist(),
+        "y_pred": y_pred.tolist(),
+        "y_scores": y_scores.tolist(),
     }
     logger.info("Evaluation: acc=%.4f  sens=%.4f  spec=%.4f  AUC=%.4f  F1=%.4f",
                 acc, sensitivity, specificity, auc, f1)
@@ -122,51 +128,78 @@ def measure_inference_time_keras(
 
 def measure_inference_time_tflite(
     tflite_path: str,
-    test_images: np.ndarray,
+    test_images: np.ndarray | None = None,
     n_runs: int = 50,
-) -> float:
-    """Measure mean CPU inference time (ms) for a TFLite model.
+) -> dict:
+    """Measure CPU inference time statistics for a TFLite model.
 
     FIX-7: Deployment-realistic benchmark. TFLite is the actual format used on Android/iOS.
-    The .keras/.h5 benchmark above is for academic comparison only.
-    Returns mean time per single image in milliseconds.
+
+    Args:
+        tflite_path: Path to the .tflite model file.
+        test_images: Optional float32 [0,255] images shaped (N, H, W, 3).
+                     If None, synthetic random images are generated for benchmarking.
+        n_runs: Number of inference passes to time.
+
+    Returns:
+        dict with mean_ms, median_ms, p95_ms.
     """
+    from model.config import IMG_SIZE
+
     interpreter = tf.lite.Interpreter(model_path=tflite_path)
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
-
-    # Determine input dtype (uint8 for INT8 quantized, float32 for float)
     input_dtype = input_details[0]["dtype"]
+
+    if test_images is None:
+        # Synthetic random images in [0,255] — sufficient for latency benchmarking
+        rng = np.random.default_rng(42)
+        test_images = rng.integers(0, 256, size=(n_runs, *IMG_SIZE, 3), dtype=np.uint8).astype(np.float32)
 
     times = []
     for img in test_images[:n_runs]:
-        if input_dtype == np.uint8:
-            inp = img.astype(np.uint8)[np.newaxis]
-        else:
-            inp = img.astype(np.float32)[np.newaxis]
+        inp = img.astype(np.uint8)[np.newaxis] if input_dtype == np.uint8 else img.astype(np.float32)[np.newaxis]
         interpreter.set_tensor(input_details[0]["index"], inp)
         start = time.perf_counter()
         interpreter.invoke()
         times.append((time.perf_counter() - start) * 1000)
         _ = interpreter.get_tensor(output_details[0]["index"])
 
-    mean_ms = float(np.mean(times))
-    logger.info("TFLite CPU inference: %.1f ms/image (n=%d)", mean_ms, n_runs)
-    return mean_ms
+    times_arr = np.array(times)
+    result = {
+        "mean_ms": float(np.mean(times_arr)),
+        "median_ms": float(np.median(times_arr)),
+        "p95_ms": float(np.percentile(times_arr, 95)),
+    }
+    logger.info("TFLite CPU inference: mean=%.1f ms  p95=%.1f ms (n=%d)",
+                result["mean_ms"], result["p95_ms"], n_runs)
+    return result
 
 
 def generate_plots(
-    y_true: np.ndarray,
-    y_pred: np.ndarray,
-    y_scores: np.ndarray,
-    history: dict,
+    results: dict,
     output_dir: str | Path,
     arch_name: str = "model",
 ) -> None:
-    """Save confusion matrix, ROC curve, and training history plots."""
+    """Save confusion matrix, ROC curve, and training history plots.
+
+    Args:
+        results: Return value of model.train.train() — must contain:
+                 results['metrics']['y_true'], ['y_pred'], ['y_scores'] (from evaluate_classification)
+                 results['phase1_history'], results['phase2_history'] (from Keras history.history)
+        output_dir: Directory to save PNG files.
+        arch_name: Used in plot titles and filenames.
+    """
+    from sklearn.metrics import roc_curve
+
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    metrics = results.get("metrics", {})
+    y_true = np.array(metrics["y_true"])
+    y_pred = np.array(metrics["y_pred"])
+    y_scores = np.array(metrics["y_scores"])
 
     # Confusion matrix
     cm = confusion_matrix(y_true, y_pred)
@@ -181,7 +214,6 @@ def generate_plots(
     plt.close(fig)
 
     # ROC curve
-    from sklearn.metrics import roc_curve
     fpr, tpr, _ = roc_curve(y_true, y_scores)
     auc = roc_auc_score(y_true, y_scores)
     fig, ax = plt.subplots(figsize=(5, 4))
@@ -194,10 +226,12 @@ def generate_plots(
     fig.savefig(output_dir / f"{arch_name}_roc_curve.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
-    # Training history
+    # Training history (phase1_history + phase2_history from train())
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-    for phase, hist, color in [("Phase 1", history.get("phase1", {}), "#2d6a4f"),
-                                 ("Phase 2", history.get("phase2", {}), "#9b2226")]:
+    for phase, hist, color in [
+        ("Phase 1", results.get("phase1_history", {}), "#2d6a4f"),
+        ("Phase 2", results.get("phase2_history", {}), "#9b2226"),
+    ]:
         if not hist:
             continue
         epochs = range(1, len(hist.get("loss", [])) + 1)

@@ -155,7 +155,7 @@ def train(
         "tflite_path": str(tflite_path),
         "tflite_size_mb": tflite_size_mb,
         "metrics": {k: float(v) if hasattr(v, "item") else v for k, v in metrics.items()
-                    if k not in ("confusion_matrix",)},
+                    if k not in ("confusion_matrix", "y_true", "y_pred", "y_scores")},
         "version": "1.0.0",
     }
     meta_path = output_dir / f"{arch_name}_meta.json"

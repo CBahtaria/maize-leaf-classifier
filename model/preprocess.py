@@ -5,15 +5,15 @@ parameter rather than hardcoding /255 normalization (which would be wrong for al
 FIX-2 — Uses tf.data.Dataset instead of deprecated ImageDataGenerator.
 """
 import logging
-from collections.abc import Callable
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from model.config import BATCH_SIZE, CHANNELS, IMG_SIZE, SEED, SUPPORTED_EXTENSIONS
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -128,27 +128,27 @@ def _load_image(path: tf.Tensor, label: tf.Tensor, img_size: tuple[int, int]) ->
 def build_tf_dataset(
     paths: list[str],
     labels: list[int],
-    preprocess_fn: Callable[..., Any],
     augment: bool,
     batch_size: int = BATCH_SIZE,
     img_size: tuple[int, int] = IMG_SIZE,
 ) -> tf.data.Dataset:
-    """Build a tf.data.Dataset pipeline.
+    """Build a tf.data.Dataset pipeline yielding raw [0,255] float32 images.
 
-    FIX-1: preprocess_fn is architecture-specific (e.g., mobilenet_v2.preprocess_input).
-           It is applied per-image BEFORE batching.
+    FIX-1: preprocessing is embedded as the first Lambda layer inside the Keras model
+           (architectures.py::build_model). Do NOT apply it here — that would cause
+           double-preprocessing: train data would be normalized twice while inference
+           data (from predict.py) is normalized only once by the model.
     FIX-2: Uses tf.data.Dataset + tf.keras.layers augmentation, NOT ImageDataGenerator.
 
     Args:
         paths: Image file paths.
         labels: Corresponding binary labels (0=Healthy, 1=Diseased).
-        preprocess_fn: Architecture-specific preprocessing function.
         augment: If True, apply augmentation layer (training only).
         batch_size: Mini-batch size.
         img_size: Target (H, W) spatial dimensions.
 
     Returns:
-        Batched, prefetched tf.data.Dataset yielding (image_tensor, label_tensor).
+        Batched, prefetched tf.data.Dataset yielding (raw_float32_image, label_tensor).
     """
     from model.augmentation import get_augmentation_layer
 
@@ -159,9 +159,6 @@ def build_tf_dataset(
         return _load_image(p, lbl, img_size)
 
     ds = path_ds.map(load_fn, num_parallel_calls=AUTOTUNE)
-
-    # Apply architecture-specific preprocessing (FIX-1)
-    ds = ds.map(lambda img, lbl: (preprocess_fn(img), lbl), num_parallel_calls=AUTOTUNE)
 
     if augment:
         aug_layer = get_augmentation_layer()
