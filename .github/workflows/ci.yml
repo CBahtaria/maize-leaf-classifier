@@ -19,14 +19,9 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        # requirements-api.txt: lightweight production deps (no TF — ai-edge-litert only)
-        # requirements-dev.txt: pytest, ruff, mypy, httpx
-        # -e . --no-deps: makes model.* and api.* importable without reinstalling deps
         run: |
           pip install --upgrade pip
           pip install -r requirements-api.txt -r requirements-dev.txt
-          pip install --upgrade "setuptools>=68.0"
-          pip install -e . --no-deps
 
       - name: Ruff lint (source only — notebooks excluded)
         run: ruff check api/ model/ tests/
@@ -37,8 +32,7 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v --tb=short
         env:
-          # TF-dependent unit tests are skipped via pytest.importorskip when TF absent.
-          # Integration tests mock the model — no model file needed.
+          PYTHONPATH: ${{ github.workspace }}
           MODEL_PATH: model_artifacts/inceptionv3_best.tflite
           MODEL_META_PATH: model_artifacts/inceptionv3_meta.json
 
