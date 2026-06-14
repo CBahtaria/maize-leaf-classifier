@@ -29,18 +29,18 @@ def _get_tflite_interpreter_cls() -> type[Any]:
     try:
         from ai_edge_litert.interpreter import Interpreter  # type: ignore[import-not-found]
         logger.debug("Using ai-edge-litert TFLite runtime")
-        return Interpreter
+        return Interpreter  # type: ignore[no-any-return]
     except ImportError:
         pass
     try:
         from tflite_runtime.interpreter import Interpreter  # type: ignore[import-not-found,no-redef]  # noqa: I001
         logger.debug("Using tflite-runtime TFLite runtime")
-        return Interpreter
+        return Interpreter  # type: ignore[no-any-return]
     except ImportError:
         pass
     import tensorflow as tf  # type: ignore[import-not-found]
     logger.debug("Using tensorflow TFLite runtime (heavy — consider ai-edge-litert)")
-    return tf.lite.Interpreter  # type: ignore[return-value]
+    return tf.lite.Interpreter  # type: ignore[return-value, no-any-return]
 
 
 class ModelWrapper:
