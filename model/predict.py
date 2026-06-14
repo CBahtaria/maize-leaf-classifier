@@ -20,7 +20,7 @@ from model.config import CLASS_LABEL, IMG_SIZE
 logger = logging.getLogger(__name__)
 
 
-def _get_tflite_interpreter_cls() -> type:
+def _get_tflite_interpreter_cls() -> type[Any]:
     """Resolve the TFLite Interpreter class at call time (not import time).
 
     Deferred so that importing model.predict never fails in environments
