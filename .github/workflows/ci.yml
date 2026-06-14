@@ -23,6 +23,7 @@ jobs:
         # requirements-dev.txt: pytest, ruff, mypy, httpx
         # -e . --no-deps: makes model.* and api.* importable without reinstalling deps
         run: |
+          pip install --upgrade pip setuptools
           pip install -r requirements-api.txt -r requirements-dev.txt
           pip install -e . --no-deps
 
