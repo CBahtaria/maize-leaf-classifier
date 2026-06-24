@@ -6,12 +6,25 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Security
+from fastapi.security.api_key import APIKeyHeader
 
 if TYPE_CHECKING:
     from model.predict import ModelWrapper
 
 logger = logging.getLogger(__name__)
+
+_api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+def verify_api_key(api_key: str | None = Security(_api_key_header)) -> None:
+    """Enforce X-API-Key when API_KEY is configured in settings. No-op when unset."""
+    from api.config import settings
+    if not settings.API_KEY:
+        return
+    if api_key != settings.API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+
 
 # Module-level singleton — loaded once at startup, shared across all requests
 _model: ModelWrapper | None = None

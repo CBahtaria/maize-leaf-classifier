@@ -4,7 +4,7 @@ import logging
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 
 from api.config import settings
-from api.dependencies import get_model, get_model_meta
+from api.dependencies import get_model, get_model_meta, verify_api_key
 from api.middleware.rate_limit import PREDICT_LIMIT, limiter
 from api.middleware.validation import validate_image_file
 from api.schemas import PredictionResponse
@@ -31,6 +31,7 @@ async def predict(
     request: Request,
     response: Response,
     file: UploadFile = File(..., description="Leaf image (JPEG/PNG/WebP, max 10 MB)"),
+    _auth: None = Depends(verify_api_key),
     model=Depends(get_model),
     model_meta: dict = Depends(get_model_meta),
 ) -> PredictionResponse:
