@@ -3,7 +3,7 @@
 # Install on the VPS / Render / Railway with:  pip install -r requirements-api.txt
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
-python-multipart==0.0.9
+python-multipart==0.0.32
 Pillow==10.3.0
 numpy==1.26.4
 slowapi==0.1.9
