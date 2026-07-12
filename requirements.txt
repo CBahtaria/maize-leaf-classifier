@@ -5,5 +5,5 @@ python-multipart==0.0.9
 Pillow==10.3.0
 numpy==1.26.4
 scikit-learn==1.4.2
-slowapi==0.1.9
+slowapi==0.1.10
 pydantic-settings==2.2.1
