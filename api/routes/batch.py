@@ -1,4 +1,5 @@
 """POST /predict/batch — batch image classification (up to 10 images)."""
+
 import logging
 import time
 
@@ -58,14 +59,18 @@ async def predict_batch(
     version = model_meta.get("version", "unknown")
 
     for upload_file in files:
-        sanitised_bytes = await validate_image_file(upload_file, max_bytes=settings.max_file_size_bytes)
+        sanitised_bytes = await validate_image_file(
+            upload_file, max_bytes=settings.max_file_size_bytes
+        )
         result = predict_image(model, sanitised_bytes)
-        predictions.append(PredictionResponse(
-            label=result["label"],
-            confidence=result["confidence"],
-            processing_time_ms=result["processing_time_ms"],
-            model_version=version,
-        ))
+        predictions.append(
+            PredictionResponse(
+                label=result["label"],
+                confidence=result["confidence"],
+                processing_time_ms=result["processing_time_ms"],
+                model_version=version,
+            )
+        )
 
     total_ms = (time.perf_counter() - start_total) * 1000
     return BatchPredictionResponse(

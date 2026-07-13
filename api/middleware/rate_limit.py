@@ -7,6 +7,7 @@ Limits:
 The limiter instance is created here and imported by routes and main.py.
 Exceeding the limit returns HTTP 429 with Retry-After: 60 header.
 """
+
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 

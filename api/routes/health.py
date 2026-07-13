@@ -1,4 +1,5 @@
 """GET /health and GET /model/info — liveness and model metadata endpoints."""
+
 import time
 
 from fastapi import APIRouter, Request

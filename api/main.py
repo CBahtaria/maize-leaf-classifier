@@ -12,6 +12,7 @@ Security:
   - File validation in middleware (MIME, size, PIL verify, EXIF strip)
   - Non-root user in Docker
 """
+
 import logging
 import time
 import urllib.request

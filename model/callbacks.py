@@ -4,6 +4,7 @@ FIX-4: LinearWarmupCallback implements the learning rate warmup described in
         the paper (Section 3.10.2). Keras has no built-in linear LR warmup;
         without this callback the warmup described in the paper would never execute.
 """
+
 import csv
 import logging
 from pathlib import Path

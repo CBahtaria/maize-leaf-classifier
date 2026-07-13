@@ -6,6 +6,7 @@ accuracy, precision, sensitivity (recall), specificity, F1, AUC-ROC.
 FIX-7: Benchmarks BOTH .keras/.h5 CPU inference time (paper-compatible academic comparison)
        AND TFLite CPU inference time (deployment-realistic benchmark for mobile devices).
 """
+
 import logging
 import time
 from pathlib import Path
@@ -65,7 +66,10 @@ def evaluate_classification(model: tf.keras.Model, test_ds: tf.data.Dataset) -> 
         "specificity": float(specificity),
         "f1": float(f1),
         "auc_roc": float(auc),
-        "tp": int(tp), "tn": int(tn), "fp": int(fp), "fn": int(fn),
+        "tp": int(tp),
+        "tn": int(tn),
+        "fp": int(fp),
+        "fn": int(fn),
         "n_test": int(n),
         "wilson_ci_95": (float(ci_lower), float(ci_upper)),
         "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
@@ -74,8 +78,14 @@ def evaluate_classification(model: tf.keras.Model, test_ds: tf.data.Dataset) -> 
         "y_pred": y_pred.tolist(),
         "y_scores": y_scores.tolist(),
     }
-    logger.info("Evaluation: acc=%.4f  sens=%.4f  spec=%.4f  AUC=%.4f  F1=%.4f",
-                acc, sensitivity, specificity, auc, f1)
+    logger.info(
+        "Evaluation: acc=%.4f  sens=%.4f  spec=%.4f  AUC=%.4f  F1=%.4f",
+        acc,
+        sensitivity,
+        specificity,
+        auc,
+        f1,
+    )
     return results
 
 
@@ -155,11 +165,17 @@ def measure_inference_time_tflite(
     if test_images is None:
         # Synthetic random images in [0,255] — sufficient for latency benchmarking
         rng = np.random.default_rng(42)
-        test_images = rng.integers(0, 256, size=(n_runs, *IMG_SIZE, 3), dtype=np.uint8).astype(np.float32)
+        test_images = rng.integers(0, 256, size=(n_runs, *IMG_SIZE, 3), dtype=np.uint8).astype(
+            np.float32
+        )
 
     times = []
     for img in test_images[:n_runs]:
-        inp = img.astype(np.uint8)[np.newaxis] if input_dtype == np.uint8 else img.astype(np.float32)[np.newaxis]
+        inp = (
+            img.astype(np.uint8)[np.newaxis]
+            if input_dtype == np.uint8
+            else img.astype(np.float32)[np.newaxis]
+        )
         interpreter.set_tensor(input_details[0]["index"], inp)
         start = time.perf_counter()
         interpreter.invoke()
@@ -172,8 +188,12 @@ def measure_inference_time_tflite(
         "median_ms": float(np.median(times_arr)),
         "p95_ms": float(np.percentile(times_arr, 95)),
     }
-    logger.info("TFLite CPU inference: mean=%.1f ms  p95=%.1f ms (n=%d)",
-                result["mean_ms"], result["p95_ms"], n_runs)
+    logger.info(
+        "TFLite CPU inference: mean=%.1f ms  p95=%.1f ms (n=%d)",
+        result["mean_ms"],
+        result["p95_ms"],
+        n_runs,
+    )
     return result
 
 
@@ -204,9 +224,15 @@ def generate_plots(
     # Confusion matrix
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(5, 4))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Greens", ax=ax,
-                xticklabels=["Healthy", "Diseased"],
-                yticklabels=["Healthy", "Diseased"])
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Greens",
+        ax=ax,
+        xticklabels=["Healthy", "Diseased"],
+        yticklabels=["Healthy", "Diseased"],
+    )
     ax.set_xlabel("Predicted")
     ax.set_ylabel("True")
     ax.set_title(f"Confusion Matrix — {arch_name}")
@@ -236,9 +262,13 @@ def generate_plots(
             continue
         epochs = range(1, len(hist.get("loss", [])) + 1)
         axes[0].plot(epochs, hist.get("loss", []), label=f"{phase} train", color=color)
-        axes[0].plot(epochs, hist.get("val_loss", []), "--", label=f"{phase} val", color=color, alpha=0.7)
+        axes[0].plot(
+            epochs, hist.get("val_loss", []), "--", label=f"{phase} val", color=color, alpha=0.7
+        )
         axes[1].plot(epochs, hist.get("accuracy", []), label=f"{phase} train", color=color)
-        axes[1].plot(epochs, hist.get("val_accuracy", []), "--", label=f"{phase} val", color=color, alpha=0.7)
+        axes[1].plot(
+            epochs, hist.get("val_accuracy", []), "--", label=f"{phase} val", color=color, alpha=0.7
+        )
     axes[0].set_title("Loss")
     axes[0].legend()
     axes[0].set_xlabel("Epoch")

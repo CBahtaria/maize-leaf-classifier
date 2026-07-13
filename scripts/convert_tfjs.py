@@ -1,11 +1,12 @@
 """Convert the best Keras model to TF.js GraphModel for browser offline inference."""
+
 import shutil
 from pathlib import Path
 
-ROOT       = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent
 MODEL_PATH = ROOT / "model_artifacts" / "mobilenetv2_best.keras"
-TFJS_OUT   = ROOT / "model_artifacts" / "tfjs_model"
-DEST       = ROOT / "frontend" / "public" / "models" / "tfjs"
+TFJS_OUT = ROOT / "model_artifacts" / "tfjs_model"
+DEST = ROOT / "frontend" / "public" / "models" / "tfjs"
 
 import tensorflow as tf  # noqa: E402
 

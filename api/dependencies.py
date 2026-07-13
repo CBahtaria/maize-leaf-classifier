@@ -1,4 +1,5 @@
 """FastAPI dependency injection: shared model wrapper singleton."""
+
 from __future__ import annotations
 
 import json
@@ -20,6 +21,7 @@ _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 def verify_api_key(api_key: str | None = Security(_api_key_header)) -> None:
     """Enforce X-API-Key when API_KEY is configured in settings. No-op when unset."""
     from api.config import settings
+
     if not settings.API_KEY:
         return
     if api_key != settings.API_KEY:
@@ -47,6 +49,7 @@ def load_model(model_path: str, meta_path: str) -> None:
     """Called once at application startup to load model into module-level singleton."""
     global _model, _model_meta
     from model.predict import load_model_for_inference
+
     _model = load_model_for_inference(model_path)
     meta_file = Path(meta_path)
     if meta_file.exists():

@@ -11,6 +11,7 @@ Security hardening for file upload endpoint:
 Privacy note: Field photos from SSA farmers often contain GPS EXIF metadata. Converting
 to RGB via PIL strips all metadata before inference, protecting farmer privacy.
 """
+
 import io
 import logging
 
@@ -19,12 +20,14 @@ from PIL import Image, UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_CONTENT_TYPES: frozenset[str] = frozenset({
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-})
+ALLOWED_CONTENT_TYPES: frozenset[str] = frozenset(
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+    }
+)
 
 MAX_IMAGE_DIMENSION = 10_000  # pixels — reject absurdly large dimensions
 
@@ -50,13 +53,15 @@ async def validate_image_file(
         raise HTTPException(
             status_code=415,
             detail=f"Unsupported media type '{content_type}'. "
-                   f"Allowed: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}",
+            f"Allowed: {', '.join(sorted(ALLOWED_CONTENT_TYPES))}",
         )
 
     # 2. Read with hard size cap (prevents reading arbitrarily large files into memory)
     content = await file.read(max_bytes + 1)
     if len(content) > max_bytes:
-        logger.warning("Rejected upload: file size %d bytes exceeds limit %d", len(content), max_bytes)
+        logger.warning(
+            "Rejected upload: file size %d bytes exceeds limit %d", len(content), max_bytes
+        )
         raise HTTPException(
             status_code=413,
             detail=f"File too large. Maximum allowed size: {max_bytes // (1024 * 1024)} MB",
@@ -94,5 +99,7 @@ async def validate_image_file(
     img_rgb.save(buf, format="JPEG", quality=90)
     sanitised = buf.getvalue()
 
-    logger.debug("Validated image: %dx%d → %d bytes sanitised JPEG", img.width, img.height, len(sanitised))
+    logger.debug(
+        "Validated image: %dx%d → %d bytes sanitised JPEG", img.width, img.height, len(sanitised)
+    )
     return sanitised

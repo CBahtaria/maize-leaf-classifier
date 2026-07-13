@@ -1,4 +1,5 @@
 """POST /predict — single image binary classification endpoint."""
+
 import logging
 
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile

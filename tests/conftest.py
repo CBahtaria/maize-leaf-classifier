@@ -1,4 +1,5 @@
 """Shared pytest fixtures."""
+
 import io
 from unittest.mock import MagicMock
 
@@ -39,6 +40,7 @@ def reset_rate_limiter():
       3.x — counts stored in MemoryStorage._events (dict of deques)
     """
     from api.middleware.rate_limit import limiter
+
     st = limiter._storage
     # Clear whichever dict attributes exist (varies by limits version)
     for attr in ("storage", "_events", "events", "expirations"):
@@ -65,5 +67,6 @@ def test_client(monkeypatch):
     )
 
     from api.main import create_app
+
     app = create_app()
     return TestClient(app)

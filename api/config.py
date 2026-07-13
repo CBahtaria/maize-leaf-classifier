@@ -1,4 +1,5 @@
 """API configuration via environment variables using pydantic-settings."""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

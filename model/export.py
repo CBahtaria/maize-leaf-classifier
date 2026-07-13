@@ -5,6 +5,7 @@ FIX-3: The research paper claims mobile deployment but never specifies TFLite co
        - INT8 quantized TFLite: ~3.5 MB (vs ~14 MB .keras), 2-4x faster inference
        - TF.js: for browser-based offline inference in the PWA
 """
+
 import logging
 import shutil
 from pathlib import Path
@@ -47,9 +48,11 @@ def export_tflite(
     if quantize:
         converter.optimizations = [tf.lite.Optimize.DEFAULT]
         if representative_images is not None:
+
             def rep_dataset():
                 for img in representative_images[:200]:
                     yield [img[np.newaxis].astype(np.float32)]
+
             converter.representative_dataset = rep_dataset
             converter.target_spec.supported_ops = [
                 tf.lite.OpsSet.TFLITE_BUILTINS_INT8,
@@ -57,8 +60,10 @@ def export_tflite(
             ]
             converter.inference_input_type = tf.uint8
             converter.inference_output_type = tf.float32
-            logger.info("TFLite: using full INT8 quantization with %d calibration images",
-                        len(representative_images[:200]))
+            logger.info(
+                "TFLite: using full INT8 quantization with %d calibration images",
+                len(representative_images[:200]),
+            )
         else:
             logger.info("TFLite: using dynamic range quantization (no calibration images provided)")
 

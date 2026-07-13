@@ -6,6 +6,7 @@ so this module passes raw image bytes with NO manual normalization.
 Production deployments use TFLite via ai-edge-litert (4 MB) or tflite-runtime.
 Full TensorFlow is only needed when loading .keras models (development/training).
 """
+
 import io
 import logging
 import time
@@ -28,17 +29,20 @@ def _get_tflite_interpreter_cls() -> type[Any]:
     """
     try:
         from ai_edge_litert.interpreter import Interpreter  # type: ignore[import-not-found]
+
         logger.debug("Using ai-edge-litert TFLite runtime")
         return Interpreter  # type: ignore[no-any-return]
     except ImportError:
         pass
     try:
         from tflite_runtime.interpreter import Interpreter  # type: ignore[import-not-found,no-redef]  # noqa: I001
+
         logger.debug("Using tflite-runtime TFLite runtime")
         return Interpreter  # type: ignore[no-any-return]
     except ImportError:
         pass
     import tensorflow as tf  # type: ignore[import-not-found]
+
     logger.debug("Using tensorflow TFLite runtime (heavy — consider ai-edge-litert)")
     return tf.lite.Interpreter  # type: ignore[return-value, no-any-return]
 
@@ -65,6 +69,7 @@ class ModelWrapper:
         else:
             # .keras model — only used in development; requires full TensorFlow
             import tensorflow as tf  # noqa: PLC0415
+
             self._model = tf.keras.models.load_model(str(self.model_path))
             logger.info("Loaded Keras model: %s", self.model_path)
 

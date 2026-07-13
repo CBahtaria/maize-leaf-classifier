@@ -6,6 +6,7 @@ FIX-1: Each architecture's preprocess_input is embedded as the first layer of th
 
 FIX-5: Layer unfreezing uses dynamic len(base_model.layers) - fine_tune_n, not hardcoded indices.
 """
+
 import tensorflow as tf
 from tensorflow.keras import Model, layers
 from tensorflow.keras.applications import (
@@ -116,6 +117,7 @@ def build_model(
     # Optional: in-model augmentation (alternative to dataset augmentation)
     if include_augmentation:
         from model.augmentation import get_augmentation_layer
+
         aug = get_augmentation_layer()
         x = aug(x)
 

@@ -6,6 +6,7 @@ Phase 2: Unfreeze top N layers of base, fine-tune with reduced LR + linear warmu
 Research protocol: Adam optimizer, class-weighted BCE loss, EarlyStopping, ModelCheckpoint,
 ReduceLROnPlateau (Phase 2 only), LinearWarmupCallback (Phase 2, FIX-4).
 """
+
 import json
 import logging
 from pathlib import Path
@@ -135,6 +136,7 @@ def train(
 
     # Export TFLite (FIX-3)
     from model.export import export_tflite
+
     tflite_path = output_dir / f"{arch_name}_int8.tflite"
     tflite_size_mb = export_tflite(
         model,
@@ -146,6 +148,7 @@ def train(
 
     # Evaluate on held-out test set
     from model.evaluate import evaluate_classification
+
     metrics = evaluate_classification(model, test_ds)
 
     # Save metadata JSON
@@ -154,8 +157,11 @@ def train(
         "model_path": str(model_path),
         "tflite_path": str(tflite_path),
         "tflite_size_mb": tflite_size_mb,
-        "metrics": {k: float(v) if hasattr(v, "item") else v for k, v in metrics.items()
-                    if k not in ("confusion_matrix", "y_true", "y_pred", "y_scores")},
+        "metrics": {
+            k: float(v) if hasattr(v, "item") else v
+            for k, v in metrics.items()
+            if k not in ("confusion_matrix", "y_true", "y_pred", "y_scores")
+        },
         "version": "1.0.0",
     }
     meta_path = output_dir / f"{arch_name}_meta.json"

@@ -12,9 +12,9 @@ from model.export import export_tflite  # noqa: E402
 def _tiny_model() -> tf.keras.Model:
     """Minimal model for test speed — not a real classifier."""
     inp = tf.keras.Input((224, 224, 3), dtype=tf.uint8, name="input")
-    x = tf.keras.layers.Lambda(
-        lambda v: tf.cast(v, tf.float32) / 127.5 - 1.0, name="preprocess"
-    )(inp)
+    x = tf.keras.layers.Lambda(lambda v: tf.cast(v, tf.float32) / 127.5 - 1.0, name="preprocess")(
+        inp
+    )
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
     out = tf.keras.layers.Dense(1, activation="sigmoid", name="output")(x)
     return tf.keras.Model(inp, out)

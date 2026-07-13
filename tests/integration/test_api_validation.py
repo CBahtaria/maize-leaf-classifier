@@ -42,6 +42,7 @@ def test_accepts_png(test_client, sample_healthy_image):
     import io
 
     from PIL import Image
+
     img = Image.open(io.BytesIO(sample_healthy_image))
     buf = io.BytesIO()
     img.save(buf, format="PNG")

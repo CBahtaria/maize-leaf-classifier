@@ -4,6 +4,7 @@ IMPORTANT: FIX-1 — preprocess_fn is architecture-specific. This module accepts
 parameter rather than hardcoding /255 normalization (which would be wrong for all 5 architectures).
 FIX-2 — Uses tf.data.Dataset instead of deprecated ImageDataGenerator.
 """
+
 import logging
 from pathlib import Path
 
@@ -46,8 +47,9 @@ def scan_dataset(data_dir: str | Path) -> tuple[list[str], list[int]]:
             if img_path.suffix in SUPPORTED_EXTENSIONS:
                 paths.append(str(img_path))
                 labels.append(label)
-    logger.info("Scanned %d images: %d healthy, %d diseased",
-                len(paths), labels.count(0), labels.count(1))
+    logger.info(
+        "Scanned %d images: %d healthy, %d diseased", len(paths), labels.count(0), labels.count(1)
+    )
     return paths, labels
 
 
@@ -88,7 +90,9 @@ def stratified_split(
     val_paths = trainval_paths[val_idx].tolist()
     val_labels = trainval_labels[val_idx].tolist()
 
-    logger.info("Split: train=%d  val=%d  test=%d", len(train_paths), len(val_paths), len(test_paths))
+    logger.info(
+        "Split: train=%d  val=%d  test=%d", len(train_paths), len(val_paths), len(test_paths)
+    )
     return (train_paths, train_labels), (val_paths, val_labels), (test_paths, test_labels)
 
 
@@ -114,6 +118,7 @@ def _load_image(path: object, label: object, img_size: tuple[int, int]) -> tuple
     This keeps the preprocessing self-contained within the model artefact.
     """
     import tensorflow as tf  # lazy: only needed during training, not at API import time
+
     raw = tf.io.read_file(path)
     img = tf.image.decode_jpeg(raw, channels=CHANNELS)
     img = tf.image.resize(img, img_size)
@@ -151,7 +156,11 @@ def build_tf_dataset(
 
     autotune = tf.data.AUTOTUNE
     path_ds = tf.data.Dataset.from_tensor_slices((paths, labels))
-    path_ds = path_ds.shuffle(len(paths), seed=SEED, reshuffle_each_iteration=True) if augment else path_ds
+    path_ds = (
+        path_ds.shuffle(len(paths), seed=SEED, reshuffle_each_iteration=True)
+        if augment
+        else path_ds
+    )
 
     def load_fn(p, lbl):
         return _load_image(p, lbl, img_size)

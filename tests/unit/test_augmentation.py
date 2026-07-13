@@ -19,7 +19,8 @@ def test_augmentation_disabled_at_inference():
     x = tf.constant(np.ones((1, 224, 224, 3), dtype=np.float32) * 128.0)
     out = layer(x, training=False)
     np.testing.assert_array_almost_equal(
-        x.numpy(), out.numpy(),
+        x.numpy(),
+        out.numpy(),
         err_msg="Augmentation applied during inference — should be pass-through when training=False",
     )
 
