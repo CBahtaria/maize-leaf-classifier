@@ -1,13 +1,25 @@
-FROM python:3.11-slim
+# Dockerfile.api.dev — Maize Leaf Classifier dev API (hot-reload)
+# Multi-stage: pip build tools excluded from runtime image
+# Source code is bind-mounted at runtime — no COPY of api/ or model/
 
-WORKDIR /app
+# Stage 1: Install runtime + dev dependencies into a venv
+FROM python:3.11-slim AS builder
 
-# Install runtime + dev dependencies in a single cached layer.
-# Source code is bind-mounted at runtime — no COPY of api/ or model/.
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY requirements.txt requirements-dev.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 
-# Run as root in dev to avoid volume-permission issues on Windows/macOS.
+# Stage 2: Minimal runtime — venv only, source bind-mounted by compose
+FROM python:3.11-slim AS runtime
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app
+
+# Run as root in dev to avoid volume-permission issues on Windows/macOS
 CMD ["uvicorn", "api.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \

@@ -1,12 +1,26 @@
-FROM python:3.11-slim
+# Dockerfile.api — Maize Leaf Classifier inference API
+# Multi-stage: build tools and pip wheel cache excluded from runtime image
+# Pattern: llama.cpp — venv built in builder, only /opt/venv copied to runtime
+
+# Stage 1: Install all Python dependencies into an isolated venv
+FROM python:3.11-slim AS builder
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Minimal runtime — no pip, no wheel cache, no build headers
+FROM python:3.11-slim AS runtime
 
 RUN groupadd --gid 1001 appgroup && \
     useradd --uid 1001 --gid appgroup --shell /bin/bash --create-home appuser
 
-WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR /app
 
 COPY api/ ./api/
 COPY model/ ./model/
