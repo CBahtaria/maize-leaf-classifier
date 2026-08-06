@@ -1,0 +1,76 @@
+name: Weekly Regression
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install --upgrade pip && pip install -r requirements-api.txt -r requirements-dev.txt
+
+      - name: Download held-out test set
+        env:
+          GDRIVE_REGRESSION_ID: ${{ secrets.GDRIVE_REGRESSION_TEST_SET_ID }}
+        run: |
+          pip install gdown
+          mkdir -p tests/regression/data
+          if [ -n "$GDRIVE_REGRESSION_ID" ]; then
+            gdown --folder "$GDRIVE_REGRESSION_ID" -O tests/regression/data --quiet
+          else
+            echo "GDRIVE_REGRESSION_TEST_SET_ID not set — skipping download, using stub images"
+          fi
+
+      - name: Download latest model artifact
+        env:
+          MODEL_ARTIFACT_URL: ${{ secrets.REGRESSION_MODEL_URL }}
+        run: |
+          mkdir -p model_artifacts
+          if [ -n "$MODEL_ARTIFACT_URL" ]; then
+            curl -fsSL "$MODEL_ARTIFACT_URL" -o model_artifacts/model.tflite
+          else
+            echo "REGRESSION_MODEL_URL not set — regression will use stub model"
+          fi
+
+      - name: Run regression accuracy gate
+        id: regression
+        run: |
+          pytest tests/regression/ -v --tb=short \
+            --accuracy-threshold=99.0 \
+            -q 2>&1 | tee regression-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        continue-on-error: true
+
+      - name: Alert on accuracy regression
+        if: steps.regression.outputs.exit_code != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('regression-output.txt', 'utf8');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[REGRESSION] Model accuracy below 99.0% — ${new Date().toISOString().split('T')[0]}`,
+              body: `## Accuracy Regression Detected\n\nWeekly regression gate failed.\n\n\`\`\`\n${output.slice(-3000)}\n\`\`\`\n\nAction: retrain or roll back to last passing model artifact.`,
+              labels: ['regression', 'model-quality'],
+            });
+
+      - name: Fail job if regression detected
+        if: steps.regression.outputs.exit_code != '0'
+        run: exit 1
