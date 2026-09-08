@@ -18,7 +18,6 @@ import pytest
 from PIL import Image
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-ACCURACY_THRESHOLD = float(os.getenv("ACCURACY_THRESHOLD", "99.0"))
 
 
 def _load_images(pattern: str) -> list[bytes]:
@@ -73,7 +72,7 @@ def model_predict():
     return predict
 
 
-def test_regression_accuracy_gate(model_predict):
+def test_regression_accuracy_gate(model_predict, accuracy_threshold):
     healthy = _healthy_images()
     diseased = _diseased_images()
     total = len(healthy) + len(diseased)
@@ -90,7 +89,7 @@ def test_regression_accuracy_gate(model_predict):
             correct += 1
 
     accuracy = (correct / total) * 100.0
-    assert accuracy >= ACCURACY_THRESHOLD, (
-        f"Accuracy {accuracy:.2f}% is below threshold {ACCURACY_THRESHOLD}% "
+    assert accuracy >= accuracy_threshold, (
+        f"Accuracy {accuracy:.2f}% is below threshold {accuracy_threshold}% "
         f"({correct}/{total} correct)"
     )
