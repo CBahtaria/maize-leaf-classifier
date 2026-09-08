@@ -17,6 +17,23 @@ def _make_jpeg_bytes(r: int, g: int, b: int) -> bytes:
     return buf.getvalue()
 
 
+def pytest_addoption(parser):
+    """Register custom --accuracy-threshold argument for regression tests."""
+    parser.addoption(
+        "--accuracy-threshold",
+        action="store",
+        default="99.0",
+        type=str,
+        help="Minimum accuracy threshold (%) for regression tests (default: 99.0)"
+    )
+
+
+@pytest.fixture
+def accuracy_threshold(request):
+    """Provide the accuracy threshold value to tests."""
+    return float(request.config.getoption("--accuracy-threshold"))
+
+
 @pytest.fixture
 def sample_healthy_image() -> bytes:
     return _make_jpeg_bytes(34, 139, 34)
